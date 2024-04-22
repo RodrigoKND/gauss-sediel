@@ -1,0 +1,40 @@
+---
+import Layout from '../layouts/Layout.astro';
+import 'bootstrap-icons/font/bootstrap-icons.css'
+import InputEquations from '../components/InputEquations.astro';
+---
+
+<Layout title="Gauss-sediel">
+	<main>
+		<h1> <span class="text-gradient">Gauss Seidel</span></h1>
+		<InputEquations/>
+	</main>
+</Layout>
+
+<style>
+	main {
+		margin: auto;
+		padding: 1rem;
+		width: 1050px;
+		max-width: calc(100% - 2rem);
+		color: white;
+		font-size: 20px;
+		line-height: 1.6;
+	}
+	h1 {
+		font-size: 4rem;
+		font-weight: 700;
+		line-height: 1;
+		text-align: center;
+		margin-bottom: 1em;
+	}
+	.text-gradient {
+		background-image: var(--accent-gradient);
+		-webkit-background-clip: text;
+		-webkit-text-fill-color: transparent;
+		background-size: 400%;
+		background-position: 0%;
+	}
+	
+</style>
+

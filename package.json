@@ -1,0 +1,22 @@
+{
+  "name": "virtual-visual",
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/react": "^3.3.0",
+    "@types/react": "^18.2.79",
+    "@types/react-dom": "^18.2.25",
+    "astro": "^4.6.1",
+    "bootstrap-icons": "^1.11.3",
+    "mathjs": "^12.4.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  }
+}
