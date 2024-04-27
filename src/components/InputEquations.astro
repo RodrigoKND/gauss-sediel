@@ -3,54 +3,60 @@ import Layout from "../layouts/Layout.astro";
 ---
 
 <Layout title="input">
-    <table id="matrix"></table>
-    <div class="container"></div>
-    <div id="clearEquations"></div>
+    <div style="display:flex; justify-content:center;">
+        <input
+            id="dimentionMatrix"
+            type="number"
+            placeholder="Dimensión de la matriz"
+        />
+    </div>
     <div style="padding: 10px; display:flex; justify-content: center;">
-        <button id="solveEquation" type="button" role="button" class="button">
+        <button id="dimention" type="button" role="button" class="button">
+            Dimensionar
+        </button>
+    </div>
+    <table id="matrix"></table>
+    <div style="padding: 10px; display:flex; justify-content: center;">
+        <button id="solveMatrix" type="button" role="button" class="button">
             Resolver matriz
         </button>
     </div>
-    <table id="LU"></table>
+    <table id="LUP"></table>
     <table id="gaussSediel"></table>
 </Layout>
 
 <script>
     import { lup, lusolve } from "mathjs";
+
     const table = document.querySelector("#matrix");
-    const LUP = document.querySelector("#LU");
+    const dimention = document.querySelector("#dimention");
+    const dimentionMatrix = document.querySelector("#dimentionMatrix");
+    const solveMatrix = document.getElementById("solveMatrix");
     const tableGaussSediel = document.querySelector("#gaussSediel");
-    const addHeadersTable = () => {
+    const LUP = document.getElementById("LUP");
+    const addHeadersTable = (quantity) => {
+        const thead = document.createElement("thead");
+        thead.setAttribute("style", "max-width:100%;");
         const tr = document.createElement("tr");
-        for (let i = 0; i < 5; i++) {
+        for (let i = 0; i < quantity; i++) {
             const th = document.createElement("th");
             const input = document.createElement("input");
             input.type = "text";
-            if (i !== 4) {
+            if (i !== quantity + 1) {
                 input.value = "X-" + `${i + 1}`;
                 input.setAttribute(
                     "style",
-                    "background-color: rgb(98, 249, 249, 0.133); border: 1px solid aqua; padding: 20px; margin: 15px 2px 5px 0px;max-width:100%; color: white; text-align: center;",
+                    "background-color: rgb(98, 249, 249, 0.133); border: 1px solid aqua; padding: 20px; margin: 15px 2px 5px 0px; color: white; text-align: center;",
                 );
                 input.readOnly = true;
                 input.setAttribute("col", `${i}`);
                 input.setAttribute("row", `${i}`);
                 th.appendChild(input);
                 tr.appendChild(th);
-            } else {
-                input.value = "B";
-                input.setAttribute(
-                    "style",
-                    "font-weight:400; border: 1px solid aqua; padding: 20px; margin: 15px 2px 5px 0px;max-width:100%; text-align: center;",
-                );
-                input.readOnly = true;
-                input.setAttribute("col", `${i}`);
-                input.setAttribute("row", `${i}`);
-                th.appendChild(input);
-                tr.appendChild(th);
+                thead.appendChild(tr);
             }
         }
-        table.appendChild(tr);
+        table.appendChild(thead);
     };
     const addCellsTable = (quantity, node, value = [], isReadOnly = false) => {
         const tBody = document.createElement("tBody");
@@ -80,86 +86,147 @@ import Layout from "../layouts/Layout.astro";
         }
         node.appendChild(tBody);
     };
-    const x1 = [],
-        x2 = [],
-        x3 = [],
-        x4 = [],
-        b = [];
-    const matrix = [x1, x2, x3, x4];
-    const saveValues = () => {
-        const cells = document.querySelectorAll("td");
-        cells.forEach((td) => {
-            const input = td.querySelectorAll("input");
-            input.forEach((inp) => {
-                inp.addEventListener("blur", (e) => {
-                    if (e.target.value) {
-                        if (e.target.getAttribute("col") === "0") {
-                            x1.push(Number(e.target.value));
-                        } else if (e.target.getAttribute("col") === "1") {
-                            x2.push(Number(e.target.value));
-                        } else if (e.target.getAttribute("col") === "2") {
-                            x3.push(Number(e.target.value));
-                        } else if (e.target.getAttribute("col") === "3") {
-                            x4.push(Number(e.target.value));
-                        } else {
-                            b.push(Number(e.target.value));
-                        }
-                    }
-                });
-            });
-        });
+
+    const multiplyMatrix = (matrixOrigin, matrixB) => {
+        let multiplicationResults = [];
+        for (let i = 0; i < matrixOrigin.length; i++) {
+            multiplicationResults[i] = [];
+            for (let j = 0; j < matrixOrigin[i].length; j++) {
+                multiplicationResults[i][j] = matrixOrigin[i][j] * matrixB[i];
+            }
+        }
+        return multiplicationResults;
     };
+
+    const getMainDiagonal = (matrixOrigin) => {
+        let diagonal = [];
+        for (let i = 0; i < matrixOrigin.length; i++) {
+            diagonal[i] = [];
+            for (let j = 0; j < matrixOrigin.length; j++) {
+                //Si la fila i es igual a la columna j, es parte de la diagonal
+                if (i === j) diagonal[i][j] = matrixOrigin[i][j];
+            }
+        }
+        //Devuelve una matriz unidimensional
+        return diagonal.flat();
+    };
+
+    const inverseDiagonal = (matrixDiagonal) => {
+        let normalize = [];
+        const inverseDiag = matrixDiagonal.map((element) => 1 / element);
+        inverseDiag.forEach((el) => normalize.push(Number(el.toFixed(2))));
+        //Me devuelve una matriz unidimensional
+        return normalize;
+    };
+
     const showLU = (matrixLU) => {
         const { L, U } = matrixLU;
         const h4 = document.createElement("h4");
         h4.textContent = "LOWER";
         LUP.appendChild(h4);
-        addCellsTable(L.length -1, LUP, L, true);
+        addCellsTable(L.length, LUP, L, true);
         const h41 = document.createElement("h4");
         h41.textContent = "UPPER";
         LUP.appendChild(h41);
-        addCellsTable(L.length-1, LUP, U, true);
+        addCellsTable(L.length, LUP, U, true);
     };
+
     const LU = () => {
-        const M = matrix;
-        let contador = 1;
-        while (contador < M.length) {
-            for (let i = 0; i < M.length; i++) {
-                if (M[i].length < 4) {
-                    M[i].push(0);
-                }
-            }
-            contador++
-        }
-        const LUM = lup(M);
+        const LUM = lup([
+            [0.25, 0.2, 0.06],
+            [0.05, 0.81, 0.12],
+            [0.35, -0.27, 0.08],
+        ]);
         showLU(LUM);
     };
-    const gaussSediel = () => {
-        const M = matrix;
-        const column = b;
-        const x = lusolve(M, column);
-        const h4 = document.createElement("h4");
-        h4.textContent = "Resultado A * x = b";
-        tableGaussSediel.appendChild(h4);
-        const tBody = document.createElement("tBody");
-        const trBody = document.createElement("tr");
-        for (let i = 0; i < x.length; i++) {
-            const td = document.createElement("td");
-            td.innerHTML = `x-${i + 1}=${Number(x[i]).toFixed(2)} | `;
-            trBody.appendChild(td);
-            tBody.appendChild(trBody);
-        }
-        tableGaussSediel.appendChild(tBody);
-    };
-    window.addEventListener("DOMContentLoaded", () => {
-        addHeadersTable();
-        addCellsTable(4, table);
-        saveValues();
-    });
-    const solveButton = document.getElementById("solveEquation");
-    solveButton.addEventListener("click", () => {
+    const gaussSediel = (matrixOrigin, matrixB) => {
         LU();
-        gaussSediel();
+        const mainDiagonal = getMainDiagonal(matrixOrigin);
+        //Devuelve una matriz unidimensional
+        const inverseD = inverseDiagonal(mainDiagonal);
+        const originXinverse = multiplyMatrix(matrixOrigin, inverseD);
+        const matrixBXInverseD = multiplyMatrix(
+            matrixB.map((i) => [i]),
+            inverseD,
+        ).flat();
+        const matrixResult = multiplyResultsLength(
+            originXinverse,
+            matrixBXInverseD,
+        );
+        const tr = document.createElement("tr");
+
+        for (let i = 0; i < matrixResult.length; i++) {
+            for (let j = 0; j < matrixResult.length; j++) {
+                if (matrixResult[i][j] !== undefined) {
+                    const td = document.createElement("td");
+                    td.setAttribute(
+                        "style",
+                        "background-color: rgb(98, 249, 249, 0.133); border: 1px solid aqua; padding: 20px; margin: 15px 2px 5px 0px;max-width:100%; color: white; text-align: center;",
+                    );
+                    td.innerHTML = "x" + i + ": " + matrixResult[i][j];
+                    tr.appendChild(td);
+                }
+            }
+        }
+        tableGaussSediel.appendChild(tr);
+    };
+
+    const multiplyResultsLength = (matrixA, matrixB) => {
+        // let isCompatible = true;
+        // for (let i = 0; i < matrixA.length; i++) {
+        //     if (matrixA[i].length !== matrixB.length) {
+        //         alert(
+        //             "No existe una relación entre la diagonal principal y la matriz B",
+        //         );
+        //         isCompatible = false;
+        //         break;
+        //     }
+        // }
+
+        // if (isCompatible) {
+        //     return lusolve(matrixA, matrixB);
+        // }
+        return lusolve(matrixA, matrixB);
+    };
+
+    dimention.addEventListener("click", () => {
+        const rangeMatrix = Number(dimentionMatrix.value);
+        if (rangeMatrix > 4 || rangeMatrix <= 1) {
+            alert("Solo es permitido hasta 4x4");
+            dimentionMatrix.value = " ";
+        } else {
+            addHeadersTable(rangeMatrix);
+            addCellsTable(rangeMatrix, table);
+        }
+    });
+
+    const matrixDouble = (lengthMatrix) => {
+        let c = [];
+        for (let i = 0; i < lengthMatrix; i++) {
+            c[i] = [];
+        }
+
+        return c;
+    };
+
+    solveMatrix.addEventListener("click", () => {
+        const cells = document.querySelectorAll("td>input");
+        const rangeMatrix = Number(dimentionMatrix.value)+1;
+        const matrixBi = matrixDouble(rangeMatrix);
+        const B = []
+        cells.forEach((input) => {
+            const attrCol = Number(input.getAttribute("col"));
+            const attrRow = Number(input.getAttribute("row"));
+            if (input.value) {
+                if(attrCol === (rangeMatrix)-1){
+                    B.push(Number(input.value));
+                }else{
+                    matrixBi[attrRow][attrCol] = Number(input.value);
+                }
+            }
+        });
+        matrixBi.pop()
+        gaussSediel(matrixBi, B)
     });
 </script>
 
@@ -175,5 +242,13 @@ import Layout from "../layouts/Layout.astro";
         border: 1px solid aqua;
         cursor: pointer;
         font-size: large;
+    }
+    #dimentionMatrix {
+        background-color: rgba(121, 25, 115, 0.133);
+        border: 1px solid rgb(241, 41, 241);
+        padding: 20px;
+        width: 25%;
+        color: white;
+        text-align: center;
     }
 </style>
